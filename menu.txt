@@ -1,16 +1,15 @@
-4
 1
-mon_a
+com chien
 100000
 
 2
-mon_b
+com canh
 150000
 
 3
-mon_c
+com thit xuon
 50000
 
 4
-mon_d
+canh
 120000
