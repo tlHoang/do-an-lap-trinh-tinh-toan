@@ -12,7 +12,9 @@ void print_menu(char name[][MAX], double cost[], int number_of_dishes, int index
 void order(char name[][MAX], double cost[MAX], int index[MAX], int number_of_dishes);
 int simplify_string_to_number(char string[]);
 int string_length(char string[]);
-int compare_string(char string_1[], char string_2[]);
+int string_compare(char string_1[], char string_2[]);
+void remove_newline(char string[]);
+int check_order(int tmp[], int n);
 
 int main() {
 	char name[MAX][MAX], transaction_code[100] = "12345";
@@ -25,9 +27,12 @@ int main() {
 //	input_transaction_code(&transaction_code);
 
 	print_menu(name, cost, number_of_dishes, index);
-	
+
 	order(name, cost, index, number_of_dishes);
-	
+//	for (int i = 0; i < 5; i++) {
+//		printf("%d", name[i]);
+//	}
+
 	return 0;
 }
 
@@ -35,7 +40,6 @@ void read_menu(char name[][MAX], double cost[], int index[], int* i) {
 	FILE* f;
 	open_file(&f, "menu.txt", "r");
 	char line[MAX];
-	size_t ln;
 
 	printf("==============MENU==============\n\n\n");
 	while (!feof(f)) {
@@ -44,10 +48,7 @@ void read_menu(char name[][MAX], double cost[], int index[], int* i) {
 
 		fgets(line, MAX, f);
 		strcpy(name[*i], line);
-		//remove \n after name
-		ln = string_length(name[*i]) - 1;
-		if (name[*i][ln] == '\n')
- 		name[*i][ln] = '\0';
+		remove_newline(name[*i]);
 
 		fgets(line, MAX, f);
 		cost[*i] = simplify_string_to_number(line);
@@ -83,39 +84,56 @@ void print_menu(char name[][MAX], double cost[], int number_of_dishes, int index
 void order(char name[][MAX], double cost[MAX], int index[MAX], int number_of_dishes) {
 	char input[50];
 	int order[100];
-	int tmp = 0, n = 0;
-	for (int i = 0; ; i++) {
-		printf("Choose your dishes:\n");
+	int tmp = 0, i = 0;
+	printf("\n\n\nPress '0' to confirm your order.\n");
+	printf("Press '-1' to undo the last choice.\n");
+	printf("Choose your dishes:\n");
+	for (i = 0; ; i++) {
 		fgets(input, sizeof(input), stdin);
-		if (input[0] >= '0' && input[0] <= '9') {
-			tmp = simplify_string_to_number(input);
-			if (tmp == 0) break;
-			order[i] = tmp;
-			n++;
+		if ((input[0] >= '0' && input[0] <= '9') || input[0] == '-') {
+			tmp = simplify_string_to_number(input) - 1;
+			if (tmp == -1) break;
+			if (tmp == -2) {
+				i--;
+				order[i] = 0;
+				i--;
+				continue;
+			}
+			if (tmp > number_of_dishes - 1 || tmp < -3) {
+				printf("We don't have that dish\n");
+				i--;
+			} else {
+				order[i] = tmp;
+			}
 		} else {
+			remove_newline(input);
 			for (int j = 0; j < number_of_dishes; j++) {
-				
+				if (string_compare(input, name[j])) {
+					order[i] = j;
+					break;
+				}
+				if (j == number_of_dishes - 1) {
+					printf("We don't have that dish %d %d\n", i, j);
+					i--;
+				}
 			}
 		}
 	}
-//	for (int i = 0; i < 5; i++) {
-//		printf("%d ", order[i]);
-//	}
+	for (int j = 0; j < i; j++) {
+		printf("%s\n", name[order[j]]);
+	}
 }
 int simplify_string_to_number(char string[]) {
-	int result;
-	size_t ln;
-	ln = string_length(string) - 1;
-	if (string[ln] == '\n')
-	string[ln] = '\0';
-	for (int i = 0; ; i++) {
-		if (string[i] != '\0') {
-			result = 10*result + string[i] - '0'; //'0' == 48
-		} else {
-			break;
-		}
+	int result = 0, sign = 1, i = 0;
+	remove_newline(string);
+	if (string[0] == '-') {
+		sign = -1;
+		i++;
 	}
-	return result;
+	for ( ; string[i] != '\0'; i++) {
+		result = result*10 + string[i] - '0'; // '0' == 48
+	}
+	return sign*result;
 }
 int string_length(char string[]) {
 	size_t length = 0;
@@ -124,7 +142,7 @@ int string_length(char string[]) {
 	}
 	return length;
 }
-int compare_string(char string_1[], char string_2[]) {
+int string_compare(char string_1[], char string_2[]) {
 	int i;
 	for (i = 0; string_1[i] && string_2[i]; i++) {
 		if (string_1[i] == string_2[i] || (string_1[i] ^ 32) == string_2[i]) { //Vi trong ma ascii chu hoa va thuong cach nhau 32 don vi
@@ -137,5 +155,16 @@ int compare_string(char string_1[], char string_2[]) {
 		return 1;
 	} else {
 		return 0;
+	}
+}
+void remove_newline(char string[]) {
+	size_t ln;
+	ln = string_length(string) - 1;
+	if (string[ln] == '\n')
+	string[ln] = '\0';
+}
+int check_order(int tmp[], int n) {
+	for (int i = 0; i < n; i++) {
+		printf("%d", tmp[i]);
 	}
 }
