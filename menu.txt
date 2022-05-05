@@ -7,7 +7,7 @@ com canh
 150000
 
 3
-com thit xuon
+com thit suon
 50000
 
 4
@@ -23,7 +23,7 @@ com canh
 150000
 
 7
-com thit xuon
+com thit suon
 50000
 
 8
@@ -39,7 +39,7 @@ com canh
 150000
 
 11
-com thit xuon
+com thit suon
 50000
 
 12
@@ -55,7 +55,7 @@ com canh
 150000
 
 15
-com thit xuon
+com thit suon
 50000
 
 16
@@ -71,7 +71,7 @@ com canh
 150000
 
 19
-com thit xuon
+com thit suon
 50000
 
 20
