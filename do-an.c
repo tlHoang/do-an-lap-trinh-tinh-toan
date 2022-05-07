@@ -1,23 +1,23 @@
 #include <stdio.h>
-#include <stdlib.h> //exit()
+#include <stdlib.h> //exit(), system()
 //#include <string.h>
 //#include <ctype.h>
 
 #define MAX 100
 
-void read_menu(char name[][MAX], double cost[], int index[], int* n);
+void cn_read_menu(char name[][MAX], double cost[], int index[], int* n);
 void open_file(FILE **f, char* file_name, char *mode);
-void input_transaction_code();
-void print_menu(char name[][MAX], double cost[], int number_of_dishes, int index[]);
-void order(char name[][MAX], double cost[MAX], int index[MAX], int number_of_dishes);
+void cn_input_transaction_code();
+void cn_print_menu(char name[][MAX], double cost[], int number_of_dishes, int index[]);
+void cn_order(char name[][MAX], double cost[MAX], int index[MAX], int number_of_dishes);
 int string_to_number(char string[]);
 int string_length(char string[]);
 int string_compare(char string_1[], char string_2[]);
 void string_copy(char des[], char src[]);
 void remove_newline(char string[]);
-int check_order(int tmp[], char name[][MAX], int n);
+int cn_check_order(int tmp[], char name[][MAX], int n);
 void wait(char name[][MAX], double cost[], int number_of_dishes, int index[], char transaction_code[]);
-int soluong();
+int soluong(int num);
 
 int main() {
 	char name[MAX][MAX], transaction_code[100] = "12345";
@@ -25,9 +25,9 @@ int main() {
 	int index[MAX];
 	int number_of_dishes;
 
-	read_menu(name, cost, index, &number_of_dishes);
-//	input_transaction_code(&transaction_code);
-//	print_menu(name, cost, number_of_dishes, index);
+	cn_read_menu(name, cost, index, &number_of_dishes);
+//	cn_input_transaction_code(&transaction_code);
+//	cn_print_menu(name, cost, number_of_dishes, index);
 	wait(name, cost, number_of_dishes, index, transaction_code);
 //	for (int i = 0; i < 5; i++) {
 //		printf("%d", name[i]);
@@ -36,7 +36,7 @@ int main() {
 	return 0;
 }
 
-void read_menu(char name[][MAX], double cost[], int index[], int* i) {
+void cn_read_menu(char name[][MAX], double cost[], int index[], int* i) {
 	FILE* f;
 	open_file(&f, "menu.txt", "r");
 	char line[MAX];
@@ -68,26 +68,33 @@ void open_file(FILE **file, char* file_name, char *mode) {
 		exit(1);
 	}
 }
-void input_transaction_code(char* code) {
+void cn_input_transaction_code(char* code) {
 	printf("Type your transaction code: ");
 	scanf("%s", code);
 	system("cls");
 }
-void print_menu(char name[][MAX], double cost[], int number_of_dishes, int index[]) {
-	printf("==============MENU==============\n\n\n");
-	printf("ID   NAME:\t\tCOST:\n");
+void cn_print_menu(char name[][MAX], double cost[], int number_of_dishes, int index[]) {
+//	printf("==============MENU==============\n\n\n");
+	printf("\t#     #    #######    #     #    #     #\n");
+	printf("\t##   ##    #          ##    #    #     #\n");
+	printf("\t# # # #    #          # #   #    #     #\n");
+	printf("\t#  #  #    #####      #  #  #    #     #\n");
+	printf("\t#     #    #          #   # #    #     #\n");
+	printf("\t#     #    #          #    ##    #     #\n");
+	printf("\t#     #    #######    #     #     #####\n\n\n");	
+	printf("ID\tNAME:\t\t\t\t\tCOST:\n");
 	for (int i = 0; i < number_of_dishes; i++) {
-		printf("[%d]  ", index[i]);
+		printf("[%d]\t", index[i]);
 		puts(name[i]);
-		printf("\t\t\t%.0lf", cost[i]); printf("\n");
-		printf("--------------------------------\n");
+		printf("\t\t\t\t\t\t%.0lf", cost[i]); printf("\n");
+		printf("------------------------------------------------------------\n");
 	}
 }
-void order(char name[][MAX], double cost[MAX], int index[MAX], int number_of_dishes) {
+void cn_order(char name[][MAX], double cost[MAX], int index[MAX], int number_of_dishes) {
 	char input[50];
 	int order[100];
 	int tmp = 0, i = 0;
-	print_menu(name, cost, number_of_dishes, index);
+	cn_print_menu(name, cost, number_of_dishes, index);
 	printf("\n\n\n[0 0]: confirm\t");
 	printf("[0]: undo\n");
 	printf("Choose your dishes:\n");
@@ -103,11 +110,11 @@ void order(char name[][MAX], double cost[MAX], int index[MAX], int number_of_dis
 			fgets(input, sizeof(input), stdin);
 		}
 		if (string_compare(input, "0 0")) {
-			if (check_order(order, name, i)) {
+			if (cn_check_order(order, name, i)) {
 				system("cls");
 				break;
 			} else {
-				print_menu(name, cost, number_of_dishes, index);
+				cn_print_menu(name, cost, number_of_dishes, index);
 				i--;
 				continue;
 			}
@@ -195,7 +202,7 @@ void remove_newline(char string[]) {
 	if (string[ln] == '\n')
 	string[ln] = '\0';
 }
-int check_order(int tmp[], char name[][MAX], int n) {
+int cn_check_order(int tmp[], char name[][MAX], int n) {
 	int check;
 	int sl, dish;
 	system("cls");
@@ -221,8 +228,8 @@ void wait(char name[][MAX], double cost[], int number_of_dishes, int index[], ch
 		fflush(stdin);
 		system("cls");
 		if (input == 1) {
-//			print_menu(name, cost, number_of_dishes, index);
-			order(name, cost, index, number_of_dishes);
+//			cn_print_menu(name, cost, number_of_dishes, index);
+			cn_order(name, cost, index, number_of_dishes);
 		}
 	}
 }
