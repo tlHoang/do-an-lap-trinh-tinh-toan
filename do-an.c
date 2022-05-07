@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h> //exit(), system()
-//#include <string.h>
-//#include <ctype.h>
+#include <time.h>
 
 #define MAX 100
 
@@ -13,11 +12,15 @@ void cn_order(char name[][MAX], double cost[MAX], int index[MAX], int number_of_
 int string_to_number(char string[]);
 int string_length(char string[]);
 int string_compare(char string_1[], char string_2[]);
+void string_concatenation(char des[], char string_1[], char string_2[]);
 void string_copy(char des[], char src[]);
+void rm_invalid(char src[]);
 void remove_newline(char string[]);
-int cn_check_order(int tmp[], char name[][MAX], int n);
+int cn_check_order(int tmp[], char name[][MAX], double cost[], int n);
 void wait(char name[][MAX], double cost[], int number_of_dishes, int index[], char transaction_code[]);
-int soluong(int num);
+int quantity(int num);
+void cn_print_receipt(int tmp[], char name[][MAX], double cost[], double total, int n);
+char* get_time();
 
 int main() {
 	char name[MAX][MAX], transaction_code[100] = "12345";
@@ -63,8 +66,8 @@ void open_file(FILE **file, char* file_name, char *mode) {
     *file = fopen(file_name, mode);
     if (!*file) {
     	printf("Can not open file.\n");
-//		perror("Because");
-		printf("Because can't find menu.txt file");
+		perror("Because");
+//		printf("Because can't find menu.txt file");
 		exit(1);
 	}
 }
@@ -110,7 +113,7 @@ void cn_order(char name[][MAX], double cost[MAX], int index[MAX], int number_of_
 			fgets(input, sizeof(input), stdin);
 		}
 		if (string_compare(input, "0 0")) {
-			if (cn_check_order(order, name, i)) {
+			if (cn_check_order(order, name, cost, i)) {
 				system("cls");
 				break;
 			} else {
@@ -131,7 +134,7 @@ void cn_order(char name[][MAX], double cost[MAX], int index[MAX], int number_of_
 				printf("We don't have that dish\n");
 				i--;
 			} else {
-				tmp = soluong(tmp);
+				tmp = quantity(tmp);
 				order[i] = tmp;
 			}
 		} else {
@@ -139,7 +142,7 @@ void cn_order(char name[][MAX], double cost[MAX], int index[MAX], int number_of_
 			for (int j = 0; j < number_of_dishes; j++) {
 				if (string_compare(input, name[j])) {
 					tmp = j;
-					tmp = soluong(tmp);
+					tmp = quantity(tmp);
 					order[i] = tmp;
 					break;
 				}
@@ -196,28 +199,63 @@ void string_copy(char des[], char src[]) {
 	}
 	des[i] = '\0';
 }
+void rm_invalid(char src[]) {
+	int i = 0;
+	while (src[i]) {
+		if (src[i] == ' ' || src[i] == ':') {
+			src[i] = '-';
+		}
+		i++;
+	}
+}
 void remove_newline(char string[]) {
 	size_t ln;
 	ln = string_length(string) - 1;
 	if (string[ln] == '\n')
 	string[ln] = '\0';
 }
-int cn_check_order(int tmp[], char name[][MAX], int n) {
+int cn_check_order(int tmp[], char name[][MAX], double cost[], int n) {
 	int check;
-	int sl, dish;
+	int qty, dish;
+	double total = 0;
 	system("cls");
-	printf("Please confirm your order\n");
+	printf("Please confirm your order.\n\n");
+	printf("NAME\t\t\tQTY.\t\t\tCOST\n\n");
+	printf("------------------------------------------------------------\n");
 	for (int i = 0; i < n; i++) {
-		sl = tmp[i] % 10;
+		qty = tmp[i] % 10;
 		dish = tmp[i] / 10;
 		puts(name[dish]);
-		printf("\t\t\t%d\n", sl);
+		printf("\t\t\t%d", qty);
+		total = total + cost[dish]*qty;
+		printf("\t\t\t%.0lf\n", cost[dish]*qty);
+		printf("------------------------------------------------------------\n\n");
 	}
+	printf("TOTAL:\t\t\t\t\t\t%.0lf\n\n\n\n", total);
 	printf("[1]: confirm\t");
 	printf("[0]: back\n");
 	scanf("%d", &check);
 	fflush(stdin);
+	if (check) cn_print_receipt(tmp, name, cost, total, n);
 	return check;
+}
+void string_concatenation(char des[], char string_1[], char string_2[]) {
+	remove_newline(des);
+	remove_newline(string_1);
+	remove_newline(string_2);
+    int i = 0, j = 0;
+    while (string_1[i] != '\0') {
+        des[j] = string_1[i];
+        i++;
+        j++;
+    }
+    i = 0;
+    while (string_2[i] != '\0') {
+        des[j] = string_2[i];
+        i++;
+        j++;
+    }
+    des[j] = '\0';
 }
 void wait(char name[][MAX], double cost[], int number_of_dishes, int index[], char transaction_code[]) {
 	int input = 1;
@@ -230,16 +268,45 @@ void wait(char name[][MAX], double cost[], int number_of_dishes, int index[], ch
 		if (input == 1) {
 //			cn_print_menu(name, cost, number_of_dishes, index);
 			cn_order(name, cost, index, number_of_dishes);
+		} else {
+			exit(0);
 		}
 	}
 }
-int soluong(int num) {
-	int sl = 0;
-	while (sl == 0) {
-		printf("so luong:");
-		scanf("%d", &sl);
+int quantity(int num) {
+	int qty = 0;
+	while (qty == 0) {
+		printf("Quantity:");
+		scanf("%d", &qty);
 		fflush(stdin);
-		num = num*10 + sl;
+		num = num*10 + qty;
 	}
 	return num;
+}
+void cn_print_receipt(int tmp[], char name[][MAX], double cost[], double total, int n) {
+	FILE* f;
+	int qty, dish;
+	char path[1000];
+	string_concatenation(path, "receipt", "\\\\");
+	string_concatenation(path, path, get_time());
+	string_concatenation(path, path, ".txt");
+	rm_invalid(path);
+//	printf("%s\n", path);
+	open_file(&f, path, "w");
+	fprintf(f, "NAME\t\t\tQTY.\t\t\tCOST\n\n");
+	for (int i = 0; i < n; i++) {
+		qty = tmp[i] % 10;
+		dish = tmp[i] / 10;
+		fprintf(f, "%s", name[dish]);
+		fprintf(f, "\t\t%d", qty);
+		fprintf(f, "\t\t\t%.0lf\n", cost[dish]*qty);
+		fprintf(f, "------------------------------------------------------------\n\n");
+	}
+	fprintf(f, "TOTAL:\t\t\t\t\t\t%.0lf\n\n\n\n", total);
+	fclose(f);
+}
+char* get_time() {
+	time_t now = time(NULL);
+	struct tm* ptm;
+	return ctime(&now);
 }
