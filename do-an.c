@@ -1,14 +1,25 @@
 #include <stdio.h>
-#include <stdlib.h> //exit(), system()
+//exit(), system()
+#include <stdlib.h>
+//for get_time()
 #include <time.h>
+//for check_folder()
+#include <dirent.h>
+#include <errno.h>
 
 #define MAX 100
+#define max_order_a_day 100
+#define max_length 100
 
-void cn_read_menu(char name[][MAX], double cost[], int index[], int* n);
+char receipt_list[max_order_a_day][35];
+int count = 0;
+
+void check_folder();
+void cn_read_menu(char name[][max_length], double cost[], int index[], int* n);
 void open_file(FILE **f, char* file_name, char *mode);
 void cn_input_transaction_code();
-void cn_print_menu(char name[][MAX], double cost[], int number_of_dishes, int index[]);
-void cn_order(char name[][MAX], double cost[MAX], int index[MAX], int number_of_dishes);
+void cn_print_menu(char name[][max_length], double cost[], int number_of_dishes, int index[]);
+void cn_order(char name[][max_length], double cost[MAX], int index[MAX], int number_of_dishes);
 int string_to_number(char string[]);
 int string_length(char string[]);
 int string_compare(char string_1[], char string_2[]);
@@ -16,19 +27,23 @@ void string_concatenation(char des[], char string_1[], char string_2[]);
 void string_copy(char des[], char src[]);
 void rm_invalid(char src[]);
 void remove_newline(char string[]);
-int cn_check_order(int tmp[], char name[][MAX], double cost[], int n);
-void wait(char name[][MAX], double cost[], int number_of_dishes, int index[], char transaction_code[]);
+int cn_check_order(int tmp[], char name[][max_length], double cost[], int n);
+void wait(char name[][max_length], double cost[], int number_of_dishes, int index[], char transaction_code[]);
 int quantity(int num);
-void cn_print_receipt(int tmp[], char name[][MAX], double cost[], double total, int n);
+void cn_print_receipt(int tmp[], char name[][max_length], double cost[], double total, double dis, int n);
 char* get_time();
+double discount();
+void end_day();
 
 int main() {
-	char name[MAX][MAX], transaction_code[100] = "12345";
+	char name[MAX][max_length], transaction_code[100] = "12345";
 	double cost[MAX];
 	int index[MAX];
 	int number_of_dishes;
-
+	
+	check_folder();
 	cn_read_menu(name, cost, index, &number_of_dishes);
+
 //	cn_input_transaction_code(&transaction_code);
 //	cn_print_menu(name, cost, number_of_dishes, index);
 	wait(name, cost, number_of_dishes, index, transaction_code);
@@ -39,7 +54,19 @@ int main() {
 	return 0;
 }
 
-void cn_read_menu(char name[][MAX], double cost[], int index[], int* i) {
+void check_folder() {
+	DIR* dir = opendir("receipt");
+	if (dir) {
+	    closedir(dir);
+	} else if (ENOENT == errno) {
+	    printf("Missing \"receipt\" folder. Please create one.");
+	    exit(1);
+	} else {
+	    printf("Error: opendir() failed...");
+	    exit(1);
+	}
+}
+void cn_read_menu(char name[][max_length], double cost[], int index[], int* i) {
 	FILE* f;
 	open_file(&f, "menu.txt", "r");
 	char line[MAX];
@@ -76,7 +103,7 @@ void cn_input_transaction_code(char* code) {
 	scanf("%s", code);
 	system("cls");
 }
-void cn_print_menu(char name[][MAX], double cost[], int number_of_dishes, int index[]) {
+void cn_print_menu(char name[][max_length], double cost[], int number_of_dishes, int index[]) {
 //	printf("==============MENU==============\n\n\n");
 	printf("\t#     #    #######    #     #    #     #\n");
 	printf("\t##   ##    #          ##    #    #     #\n");
@@ -93,22 +120,23 @@ void cn_print_menu(char name[][MAX], double cost[], int number_of_dishes, int in
 		printf("------------------------------------------------------------\n");
 	}
 }
-void cn_order(char name[][MAX], double cost[MAX], int index[MAX], int number_of_dishes) {
+void cn_order(char name[][max_length], double cost[MAX], int index[MAX], int number_of_dishes) {
 	char input[50];
 	int order[100];
 	int tmp = 0, i = 0;
 	cn_print_menu(name, cost, number_of_dishes, index);
 	printf("\n\n\n[0 0]: confirm\t");
 	printf("[0]: undo\n");
-	printf("Choose your dishes:\n");
+	printf("Choose your dishes (MAX = 5):\n");
 	for (i = 0; ; i++) {
 		if (i == 5) {
-			printf("You have reach maximum order. Please confirm or undo...\n");
-			fgets(input, sizeof(input), stdin); 
-			if (input[0] != '0') {
-				i--;
-				continue;
-			}
+//			printf("You have reach maximum order. Please confirm or undo...\n");
+//			fgets(input, sizeof(input), stdin); 
+//			if (input[0] != '0') {
+//				i--;
+//				continue;
+//			}
+			string_copy(input, "0 0");
 		} else {
 			fgets(input, sizeof(input), stdin);
 		}
@@ -117,7 +145,10 @@ void cn_order(char name[][MAX], double cost[MAX], int index[MAX], int number_of_
 				system("cls");
 				break;
 			} else {
+				system("cls");
 				cn_print_menu(name, cost, number_of_dishes, index);
+				printf("\n\n\n[0 0]: confirm\t");
+				printf("[0]: undo\n");
 				i--;
 				continue;
 			}
@@ -214,10 +245,10 @@ void remove_newline(char string[]) {
 	if (string[ln] == '\n')
 	string[ln] = '\0';
 }
-int cn_check_order(int tmp[], char name[][MAX], double cost[], int n) {
+int cn_check_order(int tmp[], char name[][max_length], double cost[], int n) {
 	int check;
 	int qty, dish;
-	double total = 0;
+	double total = 0, dis = 0;
 	system("cls");
 	printf("Please confirm your order.\n\n");
 	printf("NAME\t\t\tQTY.\t\t\tCOST\n\n");
@@ -231,12 +262,23 @@ int cn_check_order(int tmp[], char name[][MAX], double cost[], int n) {
 		printf("\t\t\t%.0lf\n", cost[dish]*qty);
 		printf("------------------------------------------------------------\n\n");
 	}
-	printf("TOTAL:\t\t\t\t\t\t%.0lf\n\n\n\n", total);
-	printf("[1]: confirm\t");
-	printf("[0]: back\n");
-	scanf("%d", &check);
-	fflush(stdin);
-	if (check) cn_print_receipt(tmp, name, cost, total, n);
+	printf("TOTAL:\t\t\t\t\t\t%.0lf\n", total);
+	dis = discount(total);
+	printf("DISCOUNT:\t\t\t\t\t%.0lf\n", dis);
+	printf("NET:\t\t\t\t\t\t%.0lf\n\n\n\n", total - dis);
+	if (n == 5) {
+		system("pause");
+		check = 1;
+	} else {
+		do {
+			printf("[1]: confirm\t");
+			printf("[0]: back\n");
+			scanf("%d", &check);
+			fflush(stdin);
+			system("cls");
+		} while (check != 1 && check != 0);
+	}
+	if (check) cn_print_receipt(tmp, name, cost, total, dis, n);
 	return check;
 }
 void string_concatenation(char des[], char string_1[], char string_2[]) {
@@ -257,33 +299,35 @@ void string_concatenation(char des[], char string_1[], char string_2[]) {
     }
     des[j] = '\0';
 }
-void wait(char name[][MAX], double cost[], int number_of_dishes, int index[], char transaction_code[]) {
-	int input = 1;
+void wait(char name[][max_length], double cost[], int number_of_dishes, int index[], char transaction_code[]) {
+	char input[100];
 	while (1) {
 		printf("[1]: order\t");
-		printf("[0]: end\n");
-		scanf("%d", &input);
+		printf("[transaction_code]: end\n");
+		scanf("%s", &input);
 		fflush(stdin);
 		system("cls");
-		if (input == 1) {
+		if (string_compare(input, "1")) {
 //			cn_print_menu(name, cost, number_of_dishes, index);
 			cn_order(name, cost, index, number_of_dishes);
-		} else {
-			exit(0);
+		} else if (string_compare(input, transaction_code)) {
+			end_day();
 		}
 	}
 }
 int quantity(int num) {
 	int qty = 0;
 	while (qty == 0) {
-		printf("Quantity:");
-		scanf("%d", &qty);
+		printf("Quantity (MAX < 10):");
+		do {
+			scanf("%d", &qty);
+		} while (qty >= 10);
 		fflush(stdin);
 		num = num*10 + qty;
 	}
 	return num;
 }
-void cn_print_receipt(int tmp[], char name[][MAX], double cost[], double total, int n) {
+void cn_print_receipt(int tmp[], char name[][max_length], double cost[], double total, double dis, int n) {
 	FILE* f;
 	int qty, dish;
 	char path[1000];
@@ -291,22 +335,38 @@ void cn_print_receipt(int tmp[], char name[][MAX], double cost[], double total, 
 	string_concatenation(path, path, get_time());
 	string_concatenation(path, path, ".txt");
 	rm_invalid(path);
-//	printf("%s\n", path);
+	
+	string_copy(receipt_list[count], path); count++;
+	
 	open_file(&f, path, "w");
 	fprintf(f, "NAME\t\t\tQTY.\t\t\tCOST\n\n");
 	for (int i = 0; i < n; i++) {
 		qty = tmp[i] % 10;
 		dish = tmp[i] / 10;
-		fprintf(f, "%s", name[dish]);
-		fprintf(f, "\t\t%d", qty);
+		fprintf(f, "%s\n", name[dish]);
+		fprintf(f, "\t\t\t%d", qty);
 		fprintf(f, "\t\t\t%.0lf\n", cost[dish]*qty);
-		fprintf(f, "------------------------------------------------------------\n\n");
+		fprintf(f, "--------------------------------------------------------------------------------------------\n\n");
 	}
-	fprintf(f, "TOTAL:\t\t\t\t\t\t%.0lf\n\n\n\n", total);
+	fprintf(f, "TOTAL:\t\t\t\t\t\t%.0lf\n", total);
+	fprintf(f, "DISCOUNT:\t\t\t\t\t%.0lf\n", dis);
+	fprintf(f, "NET:\t\t\t\t\t\t%.0lf\n\n\n\n", total - dis);
 	fclose(f);
 }
 char* get_time() {
 	time_t now = time(NULL);
 	struct tm* ptm;
 	return ctime(&now);
+}
+double discount(double n) {
+	if (n >= 2000000) n = n*25/100;
+	else n = 0;
+	return n;
+}
+void end_day() {
+	for (int i = 0; i < count; i++) {
+		puts(receipt_list[i]);
+	}
+	system("pause");
+	exit(0);
 }
