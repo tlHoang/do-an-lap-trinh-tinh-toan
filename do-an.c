@@ -11,7 +11,7 @@
 #define max_order_a_day 100
 #define max_length 100
 
-char receipt_list[max_order_a_day][35];
+char receipt_list[max_order_a_day][100];
 int count = 0;
 
 void check_folder();
