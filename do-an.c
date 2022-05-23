@@ -32,7 +32,7 @@ void wait(char name[][max_length], double cost[], int number_of_dishes, int inde
 int quantity(int num);
 void cn_print_receipt(int tmp[], char name[][max_length], double cost[], double total, double dis, int n);
 char* get_time();
-double discount();
+double discount(double n);
 void end_day();
 
 int main() {
@@ -321,6 +321,7 @@ int quantity(int num) {
 		printf("Quantity (MAX < 10):");
 		do {
 			scanf("%d", &qty);
+			if (qty >= 10) printf("Nhap so luong <= 9: ");
 		} while (qty >= 10);
 		fflush(stdin);
 		num = num*10 + qty;
