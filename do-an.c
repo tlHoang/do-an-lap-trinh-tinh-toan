@@ -14,7 +14,7 @@
 char receipt_list[max_order_a_day][100];
 int count = 0;
 
-void check_folder();
+//void check_folder();
 void cn_read_menu(char name[][max_length], double cost[], int index[], int* n);
 void open_file(FILE **f, char* file_name, char *mode);
 void cn_input_transaction_code();
@@ -25,7 +25,7 @@ int string_length(char string[]);
 int string_compare(char string_1[], char string_2[]);
 void string_concatenation(char des[], char string_1[], char string_2[]);
 void string_copy(char des[], char src[]);
-void rm_invalid(char src[]);
+void remove_invalid(char src[]);
 void remove_newline(char string[]);
 int cn_check_order(int tmp[], char name[][max_length], double cost[], int n);
 void wait(char name[][max_length], double cost[], int number_of_dishes, int index[], char transaction_code[]);
@@ -41,7 +41,7 @@ int main() {
 	int index[MAX];
 	int number_of_dishes;
 	
-	check_folder();
+//	check_folder();
 	cn_read_menu(name, cost, index, &number_of_dishes);
 
 //	cn_input_transaction_code(&transaction_code);
@@ -54,18 +54,29 @@ int main() {
 	return 0;
 }
 
-void check_folder() {
-	DIR* dir = opendir("receipt");
-	if (dir) {
-	    closedir(dir);
-	} else if (ENOENT == errno) {
-	    printf("Missing \"receipt\" folder. Please create one.");
-	    exit(1);
-	} else {
-	    printf("Error: opendir() failed...");
-	    exit(1);
-	}
-}
+//void check_folder() {
+//	DIR* dir = opendir("receipt");
+//	if (dir) {
+//	    closedir(dir);
+//	} else if (ENOENT == errno) {
+//	    printf("Missing \"receipt\" folder. Please create one.");
+//	    exit(1);
+//	} else {
+//	    printf("Error: opendir() failed...");
+//	    exit(1);
+//	}
+//
+//	DIR* dir = opendir("report");
+//	if (dir) {
+//	    closedir(dir);
+//	} else if (ENOENT == errno) {
+//	    printf("Missing \"report\" folder. Please create one.");
+//	    exit(1);
+//	} else {
+//	    printf("Error: opendir() failed...");
+//	    exit(1);
+//	}
+//}
 void cn_read_menu(char name[][max_length], double cost[], int index[], int* i) {
 	FILE* f;
 	open_file(&f, "menu.txt", "r");
@@ -230,7 +241,7 @@ void string_copy(char des[], char src[]) {
 	}
 	des[i] = '\0';
 }
-void rm_invalid(char src[]) {
+void remove_invalid(char src[]) {
 	int i = 0;
 	while (src[i]) {
 		if (src[i] == ' ' || src[i] == ':') {
@@ -330,13 +341,15 @@ int quantity(int num) {
 void cn_print_receipt(int tmp[], char name[][max_length], double cost[], double total, double dis, int n) {
 	FILE* f;
 	int qty, dish;
-	char path[1000];
-	string_concatenation(path, "receipt", "\\\\");
-	string_concatenation(path, path, get_time());
-	string_concatenation(path, path, ".txt");
-	rm_invalid(path);
+	char path[100], time[100];
 	
-	string_copy(receipt_list[count], path); count++;
+	string_copy(time, get_time());
+	remove_invalid(time);
+	string_copy(receipt_list[count], time); count++;
+	string_concatenation(path, "receipt\\\\", time);
+	string_concatenation(path, path, ".txt");
+
+//	system("pause");
 	
 	open_file(&f, path, "w");
 	fprintf(f, "NAME\t\t\tQTY.\t\t\tCOST\n\n");
@@ -364,9 +377,19 @@ double discount(double n) {
 	return n;
 }
 void end_day() {
+	FILE* f;
+	open_file(&f, "report//bao-cao.txt", "a");
+	
 	for (int i = 0; i < count; i++) {
 		puts(receipt_list[i]);
 	}
-	system("pause");
+
+	for (int i = 0; i < count; i++) {
+		fputs(receipt_list[i], f);
+		fputs("\n", f);
+	}
+
+//	system("pause");
+	fclose(f);
 	exit(0);
 }
