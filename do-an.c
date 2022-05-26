@@ -6,6 +6,8 @@
 //for check_folder()
 #include <dirent.h>
 #include <errno.h>
+//for display
+#include <windows.h>
 
 #define MAX 100
 #define max_order_a_day 100
@@ -14,6 +16,7 @@
 char receipt_list[max_order_a_day][100];
 int count = 0;
 
+void set_color(int code);
 //void check_folder();
 void cn_read_menu(char name[][max_length], double cost[], int index[], int* n);
 void open_file(FILE **f, char* file_name, char *mode);
@@ -34,6 +37,7 @@ void cn_print_receipt(int tmp[], char name[][max_length], double cost[], double 
 char* get_time();
 double discount(double n);
 void end_day();
+int check_integer(double n);
 
 int main() {
 	char name[MAX][max_length], transaction_code[100] = "12345";
@@ -47,13 +51,14 @@ int main() {
 //	cn_input_transaction_code(&transaction_code);
 //	cn_print_menu(name, cost, number_of_dishes, index);
 	wait(name, cost, number_of_dishes, index, transaction_code);
-//	for (int i = 0; i < 5; i++) {
-//		printf("%d", name[i]);
-//	}
 
 	return 0;
 }
 
+void set_color(int code) {
+	HANDLE color = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTextAttribute(color, code);
+}
 //void check_folder() {
 //	DIR* dir = opendir("receipt");
 //	if (dir) {
@@ -116,6 +121,7 @@ void cn_input_transaction_code(char* code) {
 }
 void cn_print_menu(char name[][max_length], double cost[], int number_of_dishes, int index[]) {
 //	printf("==============MENU==============\n\n\n");
+	set_color(0x0c);
 	printf("\t#     #    #######    #     #    #     #\n");
 	printf("\t##   ##    #          ##    #    #     #\n");
 	printf("\t# # # #    #          # #   #    #     #\n");
@@ -123,6 +129,7 @@ void cn_print_menu(char name[][max_length], double cost[], int number_of_dishes,
 	printf("\t#     #    #          #   # #    #     #\n");
 	printf("\t#     #    #          #    ##    #     #\n");
 	printf("\t#     #    #######    #     #     #####\n\n\n");	
+	set_color(0x0f);
 	printf("ID\tNAME:\t\t\t\t\tCOST:\n");
 	for (int i = 0; i < number_of_dishes; i++) {
 		printf("[%d]\t", index[i]);
@@ -140,17 +147,10 @@ void cn_order(char name[][max_length], double cost[MAX], int index[MAX], int num
 	printf("[0]: undo\n");
 	printf("Choose your dishes (MAX = 5):\n");
 	for (i = 0; ; i++) {
-		if (i == 5) {
-//			printf("You have reach maximum order. Please confirm or undo...\n");
-//			fgets(input, sizeof(input), stdin); 
-//			if (input[0] != '0') {
-//				i--;
-//				continue;
-//			}
-			string_copy(input, "0 0");
-		} else {
-			fgets(input, sizeof(input), stdin);
-		}
+		printf("Mon thu %d: ", i + 1);
+		if (i == 5) string_copy(input, "0 0");
+		else fgets(input, sizeof(input), stdin);
+		
 		if (string_compare(input, "0 0")) {
 			if (cn_check_order(order, name, cost, i)) {
 				system("cls");
@@ -164,6 +164,7 @@ void cn_order(char name[][max_length], double cost[MAX], int index[MAX], int num
 				continue;
 			}
 		}
+		
 		if ((input[0] >= '0' && input[0] <= '9') || input[0] == '-') {
 			tmp = string_to_number(input) - 1;
 			if (tmp == -1) {
@@ -265,8 +266,8 @@ int cn_check_order(int tmp[], char name[][max_length], double cost[], int n) {
 	printf("NAME\t\t\tQTY.\t\t\tCOST\n\n");
 	printf("------------------------------------------------------------\n");
 	for (int i = 0; i < n; i++) {
-		qty = tmp[i] % 10;
-		dish = tmp[i] / 10;
+		qty = tmp[i] % 100; //doi thanh 100
+		dish = tmp[i] / 100;
 		puts(name[dish]);
 		printf("\t\t\t%d", qty);
 		total = total + cost[dish]*qty;
@@ -319,7 +320,6 @@ void wait(char name[][max_length], double cost[], int number_of_dishes, int inde
 		fflush(stdin);
 		system("cls");
 		if (string_compare(input, "1")) {
-//			cn_print_menu(name, cost, number_of_dishes, index);
 			cn_order(name, cost, index, number_of_dishes);
 		} else if (string_compare(input, transaction_code)) {
 			end_day();
@@ -328,15 +328,12 @@ void wait(char name[][max_length], double cost[], int number_of_dishes, int inde
 }
 int quantity(int num) {
 	int qty = 0;
-	while (qty == 0) {
+	do {
 		printf("Quantity (MAX < 10):");
-		do {
-			scanf("%d", &qty);
-			if (qty >= 10) printf("Nhap so luong <= 9: ");
-		} while (qty >= 10);
+		scanf("%d", &qty);
 		fflush(stdin);
-		num = num*10 + qty;
-	}
+	} while (qty > 99 || qty < 1);
+	num = num * 100 + qty;
 	return num;
 }
 void cn_print_receipt(int tmp[], char name[][max_length], double cost[], double total, double dis, int n) {
@@ -346,7 +343,7 @@ void cn_print_receipt(int tmp[], char name[][max_length], double cost[], double 
 	
 	string_copy(time, get_time());
 	remove_invalid(time);
-	string_copy(receipt_list[count], time); count++;
+	string_copy(receipt_list[count], time); count++; //de in ra cac 
 	string_concatenation(path, "receipt\\\\", time);
 	string_concatenation(path, path, ".txt");
 
@@ -390,7 +387,9 @@ void end_day() {
 		fputs("\n", f);
 	}
 
-//	system("pause");
 	fclose(f);
 	exit(0);
+}
+int check_integer(double n) {
+	
 }
