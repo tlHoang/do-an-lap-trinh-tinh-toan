@@ -13,6 +13,10 @@
 #define max_order_a_day 100
 #define max_length 100
 
+#define red 0x0c
+#define yellow 0x0e
+#define white 0x0f
+
 char receipt_list[max_order_a_day][100];
 int count = 0;
 
@@ -121,7 +125,7 @@ void cn_input_transaction_code(char* code) {
 }
 void cn_print_menu(char name[][max_length], double cost[], int number_of_dishes, int index[]) {
 //	printf("==============MENU==============\n\n\n");
-	set_color(0x0c);
+	set_color(red);
 	printf("\t#     #    #######    #     #    #     #\n");
 	printf("\t##   ##    #          ##    #    #     #\n");
 	printf("\t# # # #    #          # #   #    #     #\n");
@@ -129,7 +133,7 @@ void cn_print_menu(char name[][max_length], double cost[], int number_of_dishes,
 	printf("\t#     #    #          #   # #    #     #\n");
 	printf("\t#     #    #          #    ##    #     #\n");
 	printf("\t#     #    #######    #     #     #####\n\n\n");	
-	set_color(0x0f);
+	set_color(white);
 	printf("ID\tNAME:\t\t\t\t\tCOST:\n");
 	for (int i = 0; i < number_of_dishes; i++) {
 		printf("[%d]\t", index[i]);
@@ -145,7 +149,9 @@ void cn_order(char name[][max_length], double cost[MAX], int index[MAX], int num
 	cn_print_menu(name, cost, number_of_dishes, index);
 	printf("\n\n\n[0 0]: confirm\t");
 	printf("[0]: undo\n");
+	set_color(yellow);
 	printf("Choose your dishes (MAX = 5):\n");
+	set_color(white);
 	for (i = 0; ; i++) {
 		printf("Mon thu %d: ", i + 1);
 		if (i == 5) string_copy(input, "0 0");
@@ -327,12 +333,35 @@ void wait(char name[][max_length], double cost[], int number_of_dishes, int inde
 	}
 }
 int quantity(int num) {
-	int qty = 0;
-	do {
-		printf("Quantity (MAX < 10):");
-		scanf("%d", &qty);
-		fflush(stdin);
-	} while (qty > 99 || qty < 1);
+	double qty = 0;
+//	do {
+//		set_color(red);
+//		printf("Quantity (MAX < 99): ");
+//		set_color(white);
+//		scanf("%d", &qty);
+//		fflush(stdin);
+//	} while (qty > 99 || qty < 1);
+
+
+	set_color(red);
+	printf("Quantity (1 =< Q =< 99): ");
+	set_color(white);
+	scanf("%lf", &qty);
+	fflush(stdin);
+	
+	//(!check_integer(x) && x > 99 && x < 1)
+	while (!check_integer(qty) || (qty > 99 || qty < 1)) {
+		if (!check_integer(qty)) {
+			printf("Integer only. Nhap lai: ");
+			scanf("%lf", &qty);
+			fflush(stdin);
+		} else {
+			printf("Out of range. Nhap lai: ");
+			scanf("%lf", &qty);
+			fflush(stdin);
+		}
+	}
+	
 	num = num * 100 + qty;
 	return num;
 }
@@ -391,5 +420,7 @@ void end_day() {
 	exit(0);
 }
 int check_integer(double n) {
-	
+	int m = (int)n;
+	if (m == n) return 1;
+	else return 0;
 }
