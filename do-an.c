@@ -3,45 +3,40 @@
 #include <stdlib.h>
 //for get_time()
 #include <time.h>
-//for check_folder()
-#include <dirent.h>
-#include <errno.h>
-//for display
-#include <windows.h>
 
 #define MAX 100
 #define max_order_a_day 100
 #define max_length 100
 
-#define red 0x0c
-#define yellow 0x0e
-#define white 0x0f
-
 char receipt_list[max_order_a_day][100];
 int count = 0;
 
-void set_color(int code);
-//void check_folder();
 void cn_read_menu(char name[][max_length], double cost[], int index[], int* n);
-void open_file(FILE **f, char* file_name, char *mode);
 void cn_input_transaction_code();
 void cn_print_menu(char name[][max_length], double cost[], int number_of_dishes, int index[]);
 void cn_order(char name[][max_length], double cost[MAX], int index[MAX], int number_of_dishes);
+void cn_print_receipt(int tmp[], char name[][max_length], double cost[], double total, double dis, int n);
+int cn_check_order(int tmp[], char name[][max_length], double cost[], int n);
+void open_file(FILE **f, char* file_name, char *mode);
+//In Chuoi.h
 int string_to_number(char string[]);
 int string_length(char string[]);
 int string_compare(char string_1[], char string_2[]);
 void string_concatenation(char des[], char string_1[], char string_2[]);
 void string_copy(char des[], char src[]);
-void remove_invalid(char src[]);
+//
 void remove_newline(char string[]);
-int cn_check_order(int tmp[], char name[][max_length], double cost[], int n);
+void remove_invalid(char src[]);
 void wait(char name[][max_length], double cost[], int number_of_dishes, int index[], char transaction_code[]);
 int quantity(int num);
-void cn_print_receipt(int tmp[], char name[][max_length], double cost[], double total, double dis, int n);
 char* get_time();
-double discount(double n);
 void end_day();
+double discount(double n);
 int check_integer(double n);
+
+#include "Chuoi.h"
+#include "Color.h"
+#include "Folder.h"
 
 int main() {
 	char name[MAX][max_length], transaction_code[100] = "12345";
@@ -49,7 +44,7 @@ int main() {
 	int index[MAX];
 	int number_of_dishes;
 	
-//	check_folder();
+	check_folder();
 	cn_read_menu(name, cost, index, &number_of_dishes);
 
 //	cn_input_transaction_code(&transaction_code);
@@ -59,33 +54,6 @@ int main() {
 	return 0;
 }
 
-void set_color(int code) {
-	HANDLE color = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetConsoleTextAttribute(color, code);
-}
-//void check_folder() {
-//	DIR* dir = opendir("receipt");
-//	if (dir) {
-//	    closedir(dir);
-//	} else if (ENOENT == errno) {
-//	    printf("Missing \"receipt\" folder. Please create one.");
-//	    exit(1);
-//	} else {
-//	    printf("Error: opendir() failed...");
-//	    exit(1);
-//	}
-//
-//	DIR* dir = opendir("report");
-//	if (dir) {
-//	    closedir(dir);
-//	} else if (ENOENT == errno) {
-//	    printf("Missing \"report\" folder. Please create one.");
-//	    exit(1);
-//	} else {
-//	    printf("Error: opendir() failed...");
-//	    exit(1);
-//	}
-//}
 void cn_read_menu(char name[][max_length], double cost[], int index[], int* i) {
 	FILE* f;
 	open_file(&f, "menu.txt", "r");
@@ -113,8 +81,8 @@ void open_file(FILE **file, char* file_name, char *mode) {
     *file = fopen(file_name, mode);
     if (!*file) {
     	printf("Can not open file.\n");
-		perror("Because");
-//		printf("Because can't find menu.txt file");
+//		perror("Because");
+		printf("Because can't find menu.txt file");
 		exit(1);
 	}
 }
@@ -124,7 +92,6 @@ void cn_input_transaction_code(char* code) {
 	system("cls");
 }
 void cn_print_menu(char name[][max_length], double cost[], int number_of_dishes, int index[]) {
-//	printf("==============MENU==============\n\n\n");
 	set_color(red);
 	printf("\t#     #    #######    #     #    #     #\n");
 	printf("\t##   ##    #          ##    #    #     #\n");
@@ -133,8 +100,9 @@ void cn_print_menu(char name[][max_length], double cost[], int number_of_dishes,
 	printf("\t#     #    #          #   # #    #     #\n");
 	printf("\t#     #    #          #    ##    #     #\n");
 	printf("\t#     #    #######    #     #     #####\n\n\n");	
-	set_color(white);
+	set_color(lightBlue);
 	printf("ID\tNAME:\t\t\t\t\tCOST:\n");
+	set_color(white);
 	for (int i = 0; i < number_of_dishes; i++) {
 		printf("[%d]\t", index[i]);
 		puts(name[i]);
@@ -203,65 +171,12 @@ void cn_order(char name[][max_length], double cost[MAX], int index[MAX], int num
 		}
 	}
 }
-int string_to_number(char string[]) {
-	int result = 0, sign = 1, i = 0;
-	remove_newline(string);
-	if (string[0] == '-') {
-		sign = -1;
-		i++;
-	}
-	for ( ; string[i] != '\0'; i++) {
-		result = result*10 + string[i] - '0'; // '0' == 48
-	}
-	return sign*result;
-}
-int string_length(char string[]) {
-	size_t length = 0;
-	while(string[length] != '\0'){
-		length++;
-	}
-	return length;
-}
-int string_compare(char string_1[], char string_2[]) {
-	remove_newline(string_1);
-	remove_newline(string_2);
-	int i;
-	for (i = 0; string_1[i] && string_2[i]; i++) {
-		if (string_1[i] == string_2[i] || (string_1[i] ^ 32) == string_2[i]) { //Vi trong ma ascii chu hoa va thuong cach nhau 32 don vi
-			continue;														   //32(10) == 100000(2) => chi khac nhau bit thu 6
-		} else {															   //Dung phep xor cho bit thu 6 neu giong nhau thi la cung 1 chu
-			break;
-		}
-	}
-	if (string_1[i] == string_2[i]) {
-		return 1;
-	} else {
-		return 0;
-	}
-}
-void string_copy(char des[], char src[]) {
-	remove_newline(des);
-	remove_newline(src);
-	int i;
-	for (i = 0; src[i] != '\0'; i++) {
-		des[i] = src[i];
-	}
-	des[i] = '\0';
-}
 void remove_invalid(char src[]) {
 	int i = 0;
 	while (src[i]) {
-		if (src[i] == ' ' || src[i] == ':') {
-			src[i] = '-';
-		}
+		if (src[i] == ' ' || src[i] == ':') src[i] = '-';
 		i++;
 	}
-}
-void remove_newline(char string[]) {
-	size_t ln;
-	ln = string_length(string) - 1;
-	if (string[ln] == '\n')
-	string[ln] = '\0';
 }
 int cn_check_order(int tmp[], char name[][max_length], double cost[], int n) {
 	int check;
@@ -299,57 +214,29 @@ int cn_check_order(int tmp[], char name[][max_length], double cost[], int n) {
 	if (check) cn_print_receipt(tmp, name, cost, total, dis, n);
 	return check;
 }
-void string_concatenation(char des[], char string_1[], char string_2[]) {
-	remove_newline(des);
-	remove_newline(string_1);
-	remove_newline(string_2);
-    int i = 0, j = 0;
-    while (string_1[i] != '\0') {
-        des[j] = string_1[i];
-        i++;
-        j++;
-    }
-    i = 0;
-    while (string_2[i] != '\0') {
-        des[j] = string_2[i];
-        i++;
-        j++;
-    }
-    des[j] = '\0';
-}
 void wait(char name[][max_length], double cost[], int number_of_dishes, int index[], char transaction_code[]) {
 	char input[100];
 	while (1) {
+		set_color(lightBlue);
 		printf("[1]: order\t");
 		printf("[transaction_code]: end\n");
+		set_color(white);
 		scanf("%s", &input);
 		fflush(stdin);
 		system("cls");
-		if (string_compare(input, "1")) {
-			cn_order(name, cost, index, number_of_dishes);
-		} else if (string_compare(input, transaction_code)) {
-			end_day();
-		}
+		if (string_compare(input, "1")) cn_order(name, cost, index, number_of_dishes);
+		else if (string_compare(input, transaction_code)) end_day();
 	}
 }
 int quantity(int num) {
 	double qty = 0;
-//	do {
-//		set_color(red);
-//		printf("Quantity (MAX < 99): ");
-//		set_color(white);
-//		scanf("%d", &qty);
-//		fflush(stdin);
-//	} while (qty > 99 || qty < 1);
-
 
 	set_color(red);
 	printf("Quantity (1 =< Q =< 99): ");
 	set_color(white);
 	scanf("%lf", &qty);
 	fflush(stdin);
-	
-	//(!check_integer(x) && x > 99 && x < 1)
+
 	while (!check_integer(qty) || (qty > 99 || qty < 1)) {
 		if (!check_integer(qty)) {
 			printf("Integer only. Nhap lai: ");
@@ -407,9 +294,7 @@ void end_day() {
 	FILE* f;
 	open_file(&f, "report//bao-cao.txt", "a");
 	
-	for (int i = 0; i < count; i++) {
-		puts(receipt_list[i]);
-	}
+	for (int i = 0; i < count; i++) puts(receipt_list[i]);
 
 	for (int i = 0; i < count; i++) {
 		fputs(receipt_list[i], f);
