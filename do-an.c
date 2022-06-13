@@ -231,7 +231,7 @@ void wait(char name[][max_length], double cost[], int number_of_dishes, int inde
 int quantity(int num) {
 	double qty = 0;
 
-	set_color(red);
+	set_color(lightBlue);
 	printf("Quantity (1 =< Q =< 99): ");
 	set_color(white);
 	scanf("%lf", &qty);
@@ -294,6 +294,9 @@ void end_day() {
 	FILE* f;
 	open_file(&f, "report//bao-cao.txt", "a");
 	
+	set_color(yellow);
+	printf("Today receipt:\n");
+	set_color(white);
 	for (int i = 0; i < count; i++) puts(receipt_list[i]);
 
 	for (int i = 0; i < count; i++) {
