@@ -59,3 +59,13 @@ void string_concatenation(char des[], char string_1[], char string_2[]) {
     }
     des[j] = '\0';
 }
+int is_number(char string[]) {		//only for integer
+	int sign = 1, i = 0;
+	if (string[0] == '-') {
+		sign = -1;
+		i = 1;
+	}
+	for ( ; string[i] != '\0'; i++)
+		if (!(string[i] >= '0' && string[i] <= '9')) return 0;
+	return 1;
+}

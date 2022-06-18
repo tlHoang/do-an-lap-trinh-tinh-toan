@@ -11,28 +11,30 @@
 char receipt_list[max_order_a_day][100];
 int count = 0;
 
+void open_file(FILE **f, char* file_name, char *mode);
 void cn_read_menu(char name[][max_length], double cost[], int index[], int* n);
 void cn_input_transaction_code();
-void cn_print_menu(char name[][max_length], double cost[], int number_of_dishes, int index[]);
+void cn_wait(char name[][max_length], double cost[], int number_of_dishes, int index[], char transaction_code[]);
 void cn_order(char name[][max_length], double cost[MAX], int index[MAX], int number_of_dishes);
-void cn_print_receipt(int tmp[], char name[][max_length], double cost[], double total, double dis, int n);
 int cn_check_order(int tmp[], char name[][max_length], double cost[], int n);
-void open_file(FILE **f, char* file_name, char *mode);
+void cn_print_receipt(int tmp[], char name[][max_length], double cost[], double total, double dis, int n);
+void end_day();
+void cn_print_menu(char name[][max_length], double cost[], int number_of_dishes, int index[]);
 //In Chuoi.h
 int string_to_number(char string[]);
 int string_length(char string[]);
 int string_compare(char string_1[], char string_2[]);
 void string_concatenation(char des[], char string_1[], char string_2[]);
 void string_copy(char des[], char src[]);
-//
+int is_number(char string[]);
 void remove_newline(char string[]);
-void remove_invalid(char src[]);
-void wait(char name[][max_length], double cost[], int number_of_dishes, int index[], char transaction_code[]);
+//
 int quantity(int num);
-char* get_time();
-void end_day();
 double discount(double n);
+char* get_time();
+void remove_invalid(char src[]);
 int check_integer(double n);
+void set_color(int code);
 
 #include "Chuoi.h"
 #include "Color.h"
@@ -49,7 +51,7 @@ int main() {
 
 //	cn_input_transaction_code(&transaction_code);
 //	cn_print_menu(name, cost, number_of_dishes, index);
-	wait(name, cost, number_of_dishes, index, transaction_code);
+	cn_wait(name, cost, number_of_dishes, index, transaction_code);
 
 	return 0;
 }
@@ -139,15 +141,13 @@ void cn_order(char name[][max_length], double cost[MAX], int index[MAX], int num
 			}
 		}
 		
-		if ((input[0] >= '0' && input[0] <= '9') || input[0] == '-') {
+		if (is_number(input)) {
 			tmp = string_to_number(input) - 1;
 			if (tmp == -1) {
 				i--;
 				order[i] = 0;
 				i--;
-				continue;
-			}
-			if (tmp > number_of_dishes - 1 || tmp < -1) {
+			} else if (tmp > number_of_dishes - 1 || tmp < -1) {
 				printf("We don't have that dish\n");
 				i--;
 			} else {
@@ -164,7 +164,7 @@ void cn_order(char name[][max_length], double cost[MAX], int index[MAX], int num
 					break;
 				}
 				if (j == number_of_dishes - 1) {
-					printf("We don't have that dish %d %d\n", i, j);
+					printf("We don't have that dish\n");
 					i--;
 				}
 			}
@@ -214,7 +214,7 @@ int cn_check_order(int tmp[], char name[][max_length], double cost[], int n) {
 	if (check) cn_print_receipt(tmp, name, cost, total, dis, n);
 	return check;
 }
-void wait(char name[][max_length], double cost[], int number_of_dishes, int index[], char transaction_code[]) {
+void cn_wait(char name[][max_length], double cost[], int number_of_dishes, int index[], char transaction_code[]) {
 	char input[100];
 	while (1) {
 		set_color(lightBlue);
