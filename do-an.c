@@ -236,7 +236,7 @@ void cn_wait(char name[][max_length], double cost[], int number_of_dishes, int i
 int quantity(int num) {
 	double qty = 0;
 
-	printf("Quantity (1 =< Q =< 99): ");
+	printf("Quantity (1 <= Q <= 99): ");
 	scanf("%lf", &qty);
 	fflush(stdin);
 
