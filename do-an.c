@@ -41,7 +41,7 @@ void set_color(int code);
 #include "Folder.h"
 
 int main() {
-	char name[MAX][max_length], transaction_code[100] = "12345";
+	char name[MAX][max_length], transaction_code[100];
 	double cost[MAX];
 	int index[MAX];
 	int number_of_dishes;
@@ -49,8 +49,7 @@ int main() {
 	check_folder();
 	cn_read_menu(name, cost, index, &number_of_dishes);
 
-//	cn_input_transaction_code(&transaction_code);
-//	cn_print_menu(name, cost, number_of_dishes, index);
+	cn_input_transaction_code(&transaction_code);
 	cn_wait(name, cost, number_of_dishes, index, transaction_code);
 
 	return 0;
@@ -117,13 +116,14 @@ void cn_order(char name[][max_length], double cost[MAX], int index[MAX], int num
 	int order[100];
 	int tmp = 0, i = 0;
 	cn_print_menu(name, cost, number_of_dishes, index);
+	set_color(aqua);
 	printf("\n\n\n[0 0]: confirm\t");
 	printf("[0]: undo\n");
 	set_color(yellow);
 	printf("Choose your dishes (MAX = 5):\n");
 	set_color(white);
 	for (i = 0; ; i++) {
-		printf("Dish number %d: ", i + 1);
+		printf("\nDish number %d: ", i + 1);
 		if (i == 5) string_copy(input, "0 0");
 		else fgets(input, sizeof(input), stdin);
 		
@@ -183,11 +183,14 @@ int cn_check_order(int tmp[], char name[][max_length], double cost[], int n) {
 	int qty, dish;
 	double total = 0, dis = 0;
 	system("cls");
+	set_color(yellow);
 	printf("Please confirm your order.\n\n");
+	set_color(lightBlue);
 	printf("NAME\t\t\tQTY.\t\t\tCOST\n\n");
+	set_color(white);
 	printf("------------------------------------------------------------\n");
 	for (int i = 0; i < n; i++) {
-		qty = tmp[i] % 100; //doi thanh 100
+		qty = tmp[i] % 100;
 		dish = tmp[i] / 100;
 		puts(name[dish]);
 		printf("\t\t\t%d", qty);
@@ -198,7 +201,9 @@ int cn_check_order(int tmp[], char name[][max_length], double cost[], int n) {
 	printf("TOTAL:\t\t\t\t\t\t%.0lf\n", total);
 	dis = discount(total);
 	printf("DISCOUNT:\t\t\t\t\t%.0lf\n", dis);
+	set_color(red);
 	printf("NET:\t\t\t\t\t\t%.0lf\n\n\n\n", total - dis);
+	set_color(white);
 	if (n == 5) {
 		system("pause");
 		check = 1;
@@ -231,19 +236,17 @@ void cn_wait(char name[][max_length], double cost[], int number_of_dishes, int i
 int quantity(int num) {
 	double qty = 0;
 
-	set_color(lightBlue);
 	printf("Quantity (1 =< Q =< 99): ");
-	set_color(white);
 	scanf("%lf", &qty);
 	fflush(stdin);
 
 	while (!check_integer(qty) || (qty > 99 || qty < 1)) {
 		if (!check_integer(qty)) {
-			printf("Integer only. Nhap lai: ");
+			printf("Integer only. Try again: ");
 			scanf("%lf", &qty);
 			fflush(stdin);
 		} else {
-			printf("Out of range. Nhap lai: ");
+			printf("Out of range. Try again: ");
 			scanf("%lf", &qty);
 			fflush(stdin);
 		}
@@ -259,11 +262,9 @@ void cn_print_receipt(int tmp[], char name[][max_length], double cost[], double 
 	
 	string_copy(time, get_time());
 	remove_invalid(time);
-	string_copy(receipt_list[count], time); count++; //de in ra cac 
+	string_copy(receipt_list[count], time); count++; //de in ra cac
 	string_concatenation(path, "receipt\\\\", time);
 	string_concatenation(path, path, ".txt");
-
-//	system("pause");
 	
 	open_file(&f, path, "w");
 	fprintf(f, "NAME\t\t\tQTY.\t\t\tCOST\n\n");
@@ -275,7 +276,7 @@ void cn_print_receipt(int tmp[], char name[][max_length], double cost[], double 
 		fprintf(f, "\t\t\t%.0lf\n", cost[dish]*qty);
 		fprintf(f, "--------------------------------------------------------------------------------------------\n\n");
 	}
-	fprintf(f, "TOTAL:\t\t\t\t\t\t%.0lf\n", total);
+	fprintf(f, "SUBTOTAL:\t\t\t\t\t\t%.0lf\n", total);
 	fprintf(f, "DISCOUNT:\t\t\t\t\t%.0lf\n", dis);
 	fprintf(f, "NET:\t\t\t\t\t\t%.0lf\n\n\n\n", total - dis);
 	fclose(f);
@@ -295,7 +296,7 @@ void end_day() {
 	open_file(&f, "report//bao-cao.txt", "a");
 	
 	set_color(yellow);
-	printf("Today receipt:\n");
+	printf("Today order:\n");
 	set_color(white);
 	for (int i = 0; i < count; i++) puts(receipt_list[i]);
 
