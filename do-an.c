@@ -123,7 +123,7 @@ void cn_order(char name[][max_length], double cost[MAX], int index[MAX], int num
 	printf("Choose your dishes (MAX = 5):\n");
 	set_color(white);
 	for (i = 0; ; i++) {
-		printf("Mon thu %d: ", i + 1);
+		printf("Dish number %d: ", i + 1);
 		if (i == 5) string_copy(input, "0 0");
 		else fgets(input, sizeof(input), stdin);
 		
