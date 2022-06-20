@@ -41,6 +41,8 @@ void set_color(int code);
 #include "Folder.h"
 
 int main() {
+	SetConsoleTitle("PBL_1");
+	
 	char name[MAX][max_length], transaction_code[100];
 	double cost[MAX];
 	int index[MAX];
@@ -114,7 +116,7 @@ void cn_print_menu(char name[][max_length], double cost[], int number_of_dishes,
 void cn_order(char name[][max_length], double cost[MAX], int index[MAX], int number_of_dishes) {
 	char input[50];
 	int order[100];
-	int tmp = 0, i = 0;
+	int tmp = 0, i = 0, flag;
 	cn_print_menu(name, cost, number_of_dishes, index);
 	set_color(aqua);
 	printf("\n\n\n[0 0]: confirm\t");
@@ -156,17 +158,19 @@ void cn_order(char name[][max_length], double cost[MAX], int index[MAX], int num
 			}
 		} else {
 			remove_newline(input);
+			flag = 1;
 			for (int j = 0; j < number_of_dishes; j++) {
 				if (string_compare(input, name[j])) {
 					tmp = j;
 					tmp = quantity(tmp);
 					order[i] = tmp;
+					flag = 0;
 					break;
 				}
-				if (j == number_of_dishes - 1) {
-					printf("We don't have that dish\n");
-					i--;
-				}
+			}
+			if (flag) {
+				printf("We don't have that dish\n");
+				i--;
 			}
 		}
 	}
@@ -211,6 +215,7 @@ int cn_check_order(int tmp[], char name[][max_length], double cost[], int n) {
 		do {
 			printf("[1]: confirm\t");
 			printf("[0]: back\n");
+			printf("\nINPUT: ");
 			scanf("%d", &check);
 			fflush(stdin);
 			system("cls");
@@ -226,6 +231,7 @@ void cn_wait(char name[][max_length], double cost[], int number_of_dishes, int i
 		printf("[1]: order\t");
 		printf("[transaction_code]: end\n");
 		set_color(white);
+		printf("\nINPUT: ");
 		scanf("%s", &input);
 		fflush(stdin);
 		system("cls");
