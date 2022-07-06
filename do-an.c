@@ -3,10 +3,19 @@
 #include <stdlib.h>
 //for get_time()
 #include <time.h>
+#include <windows.h>
+
 
 #define MAX 100
 #define max_order_a_day 100
 #define max_length 100
+
+#define blue 0x01
+#define aqua 0x03
+#define lightBlue 0x0b
+#define red 0x0c
+#define yellow 0x0e
+#define white 0x0f
 
 char receipt_list[max_order_a_day][100];
 int count = 0;
@@ -20,7 +29,6 @@ int cn_check_order(int tmp[], char name[][max_length], double cost[], int n);
 void cn_print_receipt(int tmp[], char name[][max_length], double cost[], double total, double dis, int n);
 void end_day();
 void cn_print_menu(char name[][max_length], double cost[], int number_of_dishes, int index[]);
-//In Chuoi.h
 int string_to_number(char string[]);
 int string_length(char string[]);
 int string_compare(char string_1[], char string_2[]);
@@ -28,17 +36,12 @@ void string_concatenation(char des[], char string_1[], char string_2[]);
 void string_copy(char des[], char src[]);
 int is_number(char string[]);
 void remove_newline(char string[]);
-//
 int quantity(int num);
 double discount(double n);
 char* get_time();
 void remove_invalid(char src[]);
 int check_integer(double n);
 void set_color(int code);
-
-#include "Chuoi.h"
-#include "Color.h"
-#include "Folder.h"
 
 int main() {
 	SetConsoleTitle("PBL_1");
@@ -48,7 +51,7 @@ int main() {
 	int index[MAX];
 	int number_of_dishes;
 	
-	check_folder();
+//	check_folder();
 	cn_read_menu(name, cost, index, &number_of_dishes);
 
 	cn_input_transaction_code(&transaction_code);
@@ -268,7 +271,7 @@ void cn_print_receipt(int tmp[], char name[][max_length], double cost[], double 
 	
 	string_copy(time, get_time());
 	remove_invalid(time);
-	string_copy(receipt_list[count], time); count++; //de in ra cac
+	string_copy(receipt_list[count], time); count++;
 	string_concatenation(path, "receipt\\\\", time);
 	string_concatenation(path, path, ".txt");
 	
@@ -298,14 +301,21 @@ double discount(double n) {
 	return n;
 }
 void end_day() {
+	char path[100], day[100];
 	FILE* f;
-	open_file(&f, "report//bao-cao.txt", "a");
-	
+		
 	set_color(yellow);
 	printf("Today order:\n");
 	set_color(white);
 	for (int i = 0; i < count; i++) puts(receipt_list[i]);
 
+	string_copy(day, get_time());
+	remove_invalid(day); day[7] = '\0';
+	string_concatenation(path, "report\\\\", day);
+	string_concatenation(path, path, ".txt");
+	
+	open_file(&f, path, "a");
+	
 	for (int i = 0; i < count; i++) {
 		fputs(receipt_list[i], f);
 		fputs("\n", f);
@@ -318,4 +328,79 @@ int check_integer(double n) {
 	int m = (int)n;
 	if (m == n) return 1;
 	else return 0;
+}
+void set_color(int code) {
+	HANDLE color = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTextAttribute(color, code);
+}
+void remove_newline(char string[]) {
+	size_t ln;
+	ln = string_length(string) - 1;
+	if (string[ln] == '\n')
+	string[ln] = '\0';
+}
+int string_to_number(char string[]) {
+	int result = 0, sign = 1, i = 0;
+	remove_newline(string);
+	if (string[0] == '-') {
+		sign = -1;
+		i++;
+	}
+	for ( ; string[i] != '\0'; i++) {
+		result = result*10 + string[i] - '0'; // '0' == 48
+	}
+	return sign*result;
+}
+int string_length(char string[]) {
+	size_t length = 0;
+	while(string[length] != '\0'){
+		length++;
+	}
+	return length;
+}
+int string_compare(char string_1[], char string_2[]) {
+	remove_newline(string_1);
+	remove_newline(string_2);
+	int i;
+	for (i = 0; string_1[i] && string_2[i]; i++) {
+		if (string_1[i] == string_2[i] || (string_1[i] ^ 32) == string_2[i]) continue;
+		else break;                                                                    
+	}                                                                               
+	if (string_1[i] == string_2[i]) return 1;
+	else return 0;
+}
+void string_copy(char des[], char src[]) {
+	remove_newline(des);
+	remove_newline(src);
+	int i;
+	for (i = 0; src[i] != '\0'; i++) des[i] = src[i];
+	des[i] = '\0';
+}
+void string_concatenation(char des[], char string_1[], char string_2[]) {
+	remove_newline(des);
+	remove_newline(string_1);
+	remove_newline(string_2);
+    int i = 0, j = 0;
+    while (string_1[i] != '\0') {
+        des[j] = string_1[i];
+        i++;
+        j++;
+    }
+    i = 0;
+    while (string_2[i] != '\0') {
+        des[j] = string_2[i];
+        i++;
+        j++;
+    }
+    des[j] = '\0';
+}
+int is_number(char string[]) {		//only for integer
+	int sign = 1, i = 0;
+	if (string[0] == '-') {
+		sign = -1;
+		i = 1;
+	}
+	for ( ; string[i] != '\0'; i++)
+		if (!(string[i] >= '0' && string[i] <= '9')) return 0;
+	return 1;
 }
